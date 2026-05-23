@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Browse Jobs – JobPortal{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="bg-primary text-white py-4">
+  <div class="container">
+    <h2 class="fw-800 mb-1">Find Jobs</h2>
+    <p class="opacity-75 mb-0">{{ total_jobs|default:"0" }} jobs available</p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- ── SIDEBAR FILTERS ── -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top:80px;">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-700 mb-0">Filters</h6>
+            <a href="{% url 'jobs:list' %}" class="text-danger small text-decoration-none">Clear All</a>
+          </div>
+          <form method="GET" id="filterForm">
+            <!-- Search -->
+            <input type="text" name="q" class="form-control mb-3" placeholder="Keywords..." value="{{ request.GET.q }}">
+
+            <!-- Location -->
+            <div class="mb-3">
+              <label class="fw-600 small mb-1">Location</label>
+              <input type="text" name="location" class="form-control" placeholder="City or Remote" value="{{ request.GET.location }}">
+            </div>
+
+            <!-- Job Type -->
+            <div class="mb-3">
+              <label class="fw-600 small mb-1">Job Type</label>
+              {% for val, label in job_types %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="job_type" value="{{ val }}" id="jt_{{ val }}"
+                  {% if val in selected_job_types %}checked{% endif %}>
+                <label class="form-check-label small" for="jt_{{ val }}">{{ label }}</label>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Experience -->
+            <div class="mb-3">
+              <label class="fw-600 small mb-1">Experience</label>
+              <select name="experience" class="form-select form-select-sm">
+                <option value="">Any Experience</option>
+                {% for val, label in experience_choices %}
+                <option value="{{ val }}" {% if request.GET.experience == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Salary Range -->
+            <div class="mb-3">
+              <label class="fw-600 small mb-1">Min Salary (₹ LPA)</label>
+              <input type="number" name="min_salary" class="form-control form-control-sm" placeholder="e.g. 500000" value="{{ request.GET.min_salary }}">
+            </div>
+
+            <!-- Category -->
+            <div class="mb-3">
+              <label class="fw-600 small mb-1">Category</label>
+              <select name="category" class="form-select form-select-sm">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-sm fw-600">Apply Filters</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── JOB LISTINGS ── -->
+    <div class="col-lg-9">
+      <!-- Sort bar -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Showing <strong>{{ jobs.count }}</strong> of <strong>{{ total_jobs }}</strong> jobs</span>
+        <select name="sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()" form="filterForm">
+          <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+          <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+          <option value="-min_salary" {% if request.GET.sort == '-min_salary' %}selected{% endif %}>Highest Salary</option>
+        </select>
+      </div>
+
+      <!-- Job Cards -->
+      {% for job in jobs %}
+      <div class="card border-0 shadow-sm mb-3 rounded-3 hover-lift job-card">
+        <div class="card-body p-4">
+          <div class="row align-items-center g-3">
+            <div class="col-auto">
+              {% if job.company.logo %}
+                <img src="{{ job.company.logo.url }}" class="rounded-2" width="56" height="56" style="object-fit:contain;" alt="{{ job.company.name }}">
+              {% else %}
+                <div class="company-icon rounded-2 bg-primary-subtle d-flex align-items-center justify-content-center text-primary fw-700 fs-4" style="width:56px;height:56px;">
+                  {{ job.company.name|first|upper }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col">
+              <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                <div>
+                  <h5 class="fw-700 mb-0">
+                    <a href="{% url 'jobs:detail' job.slug %}" class="text-dark text-decoration-none">{{ job.title }}</a>
+                  </h5>
+                  <div class="text-muted small">
+                    <a href="{% url 'companies:detail' job.company.slug %}" class="text-muted text-decoration-none">{{ job.company.name }}</a>
+                    {% if job.company.is_verified %}<i class="bi bi-patch-check-fill text-primary ms-1" title="Verified Company"></i>{% endif %}
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  {% if job.is_featured %}<span class="badge bg-warning text-dark">Featured</span>{% endif %}
+                  {% if user.is_authenticated and user.is_candidate %}
+                  <button class="btn btn-sm btn-light border save-job-btn" data-job-id="{{ job.id }}" title="Save Job">
+                    <i class="bi bi-bookmark{% if job.id in saved_job_ids %}-fill text-primary{% endif %}"></i>
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <span class="badge bg-light text-dark border small"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ job.location }}</span>
+                <span class="badge bg-light text-dark border small"><i class="bi bi-briefcase me-1 text-primary"></i>{{ job.get_job_type_display }}</span>
+                <span class="badge bg-light text-dark border small"><i class="bi bi-bar-chart me-1 text-success"></i>{{ job.get_experience_required_display }}</span>
+                {% for skill in job.skills_required.all|slice:":3" %}
+                <span class="badge bg-primary-subtle text-primary small">{{ skill.name }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-auto text-end">
+              <div class="text-success fw-700 mb-1">{{ job.salary_display }}</div>
+              <div class="text-muted small mb-2">{{ job.created_at|timesince }} ago</div>
+              <a href="{% url 'jobs:detail' job.slug %}" class="btn btn-primary btn-sm px-3">Apply Now</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5">
+        <i class="bi bi-search text-muted" style="font-size:3rem;"></i>
+        <h5 class="mt-3 text-muted">No jobs found</h5>
+        <p class="text-muted">Try adjusting your search filters</p>
+        <a href="{% url 'jobs:list' %}" class="btn btn-outline-primary">Clear Filters</a>
+      </div>
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ filter_params }}">&laquo;</a></li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&{{ filter_params }}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ filter_params }}">&raquo;</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Save/unsave job via AJAX
+document.querySelectorAll('.save-job-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const jobId = btn.dataset.jobId;
+    const res = await fetch(`/applications/save-job/${jobId}/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.cookie.match(/csrftoken=([\w-]+)/)?.[1] || ''}
+    });
+    const data = await res.json();
+    const icon = btn.querySelector('i');
+    if (data.saved) {
+      icon.className = 'bi bi-bookmark-fill text-primary';
+    } else {
+      icon.className = 'bi bi-bookmark';
+    }
+  });
+});
+</script>
+{% endblock %}

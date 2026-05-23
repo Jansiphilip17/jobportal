@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Companies – JobPortal{% endblock %}
+{% block content %}
+<div class="bg-primary text-white py-4 mb-4">
+  <div class="container">
+    <h2 class="fw-800 mb-1">Top Companies</h2>
+    <p class="opacity-75 mb-0">{{ companies.count }} companies hiring right now</p>
+  </div>
+</div>
+<div class="container pb-5">
+  <!-- Search -->
+  <form method="GET" class="mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <input type="text" name="q" class="form-control" placeholder="Search companies..." value="{{ request.GET.q }}">
+      </div>
+      <div class="col-md-3">
+        <input type="text" name="industry" class="form-control" placeholder="Industry" value="{{ request.GET.industry }}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="row g-3">
+    {% for company in companies %}
+    <div class="col-lg-3 col-md-4 col-6">
+      <a href="{% url 'companies:detail' company.slug %}" class="card border-0 shadow-sm text-decoration-none hover-lift h-100">
+        <div class="card-body p-4 text-center">
+          {% if company.logo %}
+            <img src="{{ company.logo.url }}" class="mb-3" style="max-height:56px;max-width:120px;object-fit:contain;" alt="{{ company.name }}">
+          {% else %}
+            <div class="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center text-primary fw-700 fs-2 mx-auto mb-3" style="width:64px;height:64px;">
+              {{ company.name|first|upper }}
+            </div>
+          {% endif %}
+          <h6 class="fw-700 text-dark mb-1 text-truncate">{{ company.name }}</h6>
+          <div class="text-muted small mb-2">{{ company.industry|default:"Technology" }}</div>
+          <span class="badge bg-primary-subtle text-primary">{{ company.jobs.count }} Jobs</span>
+          {% if company.is_verified %}<i class="bi bi-patch-check-fill text-primary ms-1" title="Verified"></i>{% endif %}
+        </div>
+      </a>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">No companies found.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

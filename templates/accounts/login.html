@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Login – JobPortal{% endblock %}
+{% block content %}
+<div class="auth-page py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 p-2">
+          <div class="card-body p-4">
+            <div class="text-center mb-4">
+              <i class="bi bi-briefcase-fill text-primary fs-1"></i>
+              <h3 class="fw-800 mt-2 mb-0">Welcome back</h3>
+              <p class="text-muted">Sign in to your account</p>
+            </div>
+
+            <form method="POST" novalidate>
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label fw-600 small">Email Address</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-600 small mb-0">Password</label>
+                  <a href="{% url 'accounts:forgot_password' %}" class="text-primary small text-decoration-none">Forgot password?</a>
+                </div>
+                <div class="input-group">
+                  {{ form.password }}
+                  <button class="btn btn-light border" type="button" onclick="togglePassword(this)">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                {% if form.password.errors %}
+                  <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                {% endif %}
+              </div>
+              {% if form.non_field_errors %}
+              <div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>
+              {% endif %}
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg fw-600">Sign In</button>
+              </div>
+            </form>
+
+            <div class="text-center">
+              <p class="text-muted small mb-1">Don't have an account?</p>
+              <a href="{% url 'accounts:register_candidate' %}" class="btn btn-outline-primary btn-sm me-2">Register as Candidate</a>
+              <a href="{% url 'accounts:register_recruiter' %}" class="btn btn-outline-secondary btn-sm">Register as Recruiter</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function togglePassword(btn) {
+  const input = btn.closest('.input-group').querySelector('input');
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') { input.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { input.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+</script>
+{% endblock %}

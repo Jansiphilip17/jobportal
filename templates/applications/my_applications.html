@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load application_tags %}
+{% block title %}My Applications – JobPortal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">{% include 'dashboard/candidate_sidebar.html' %}</div>
+    <div class="col-lg-9">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-800 mb-0">My Applications</h4>
+        <select class="form-select form-select-sm w-auto" onchange="filterApplications(this.value)">
+          <option value="">All Status</option>
+          <option value="applied">Applied</option>
+          <option value="under_review">Under Review</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="interview_scheduled">Interview Scheduled</option>
+          <option value="selected">Selected</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      {% for app in applications %}
+      <div class="card border-0 shadow-sm rounded-3 mb-3 app-card" data-status="{{ app.status }}">
+        <div class="card-body p-4">
+
+          <!-- Job Info Row -->
+          <div class="row align-items-center g-3">
+            <div class="col-auto">
+              {% if app.job.company.logo %}
+                <img src="{{ app.job.company.logo.url }}" class="rounded-2"
+                     width="52" height="52" style="object-fit:contain;">
+              {% else %}
+                <div class="rounded-2 bg-primary-subtle d-flex align-items-center
+                     justify-content-center text-primary fw-700 fs-4"
+                     style="width:52px;height:52px;">
+                  {{ app.job.company.name|first|upper }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="col">
+              <h6 class="fw-700 mb-0">
+                <a href="{% url 'jobs:detail' app.job.slug %}"
+                   class="text-dark text-decoration-none">{{ app.job.title }}</a>
+              </h6>
+              <div class="text-muted small">
+                {{ app.job.company.name }} &middot; {{ app.job.location }}
+              </div>
+              <div class="text-muted small mt-1">
+                Applied on {{ app.applied_at|date:"d M Y" }}
+              </div>
+            </div>
+
+            <div class="col-auto text-end">
+              {% if app.status == 'applied' %}
+                <span class="badge bg-secondary fs-6 px-3 py-2">Applied</span>
+              {% elif app.status == 'under_review' %}
+                <span class="badge bg-info text-dark fs-6 px-3 py-2">Under Review</span>
+              {% elif app.status == 'shortlisted' %}
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Shortlisted</span>
+              {% elif app.status == 'interview_scheduled' %}
+                <span class="badge bg-primary fs-6 px-3 py-2">Interview Scheduled</span>
+              {% elif app.status == 'selected' %}
+                <span class="badge bg-success fs-6 px-3 py-2">🎉 Selected</span>
+              {% elif app.status == 'rejected' %}
+                <span class="badge bg-danger fs-6 px-3 py-2">Rejected</span>
+              {% elif app.status == 'withdrawn' %}
+                <span class="badge bg-secondary fs-6 px-3 py-2">Withdrawn</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Progress Timeline -->
+          <div class="mt-3 pt-3 border-top">
+            <div class="d-flex align-items-center">
+              {% for step_val, step_label in status_steps %}
+
+                {% comment %}Check if this step is reached{% endcomment %}
+                {% with is_done=app.status|get_status_position:step_val %}
+
+                  <div class="text-center flex-shrink-0" style="min-width:90px;">
+                    <div class="mx-auto rounded-circle d-flex align-items-center
+                         justify-content-center fw-600
+                         {% if is_done %}bg-primary text-white{% else %}bg-light text-muted border{% endif %}"
+                         style="width:30px;height:30px;font-size:13px;">
+                      {% if is_done %}
+                        <i class="bi bi-check"></i>
+                      {% else %}
+                        &bull;
+                      {% endif %}
+                    </div>
+                    <div class="mt-1 {% if is_done %}text-primary fw-600{% else %}text-muted{% endif %}"
+                         style="font-size:10px;">
+                      {{ step_label }}
+                    </div>
+                  </div>
+
+                  {% if not forloop.last %}
+                    <div class="flex-fill border-top
+                         {% if is_done %}border-primary{% endif %}"
+                         style="height:2px;margin-bottom:18px;"></div>
+                  {% endif %}
+
+                {% endwith %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Interview Info -->
+          {% for interview in app.interviews.all %}
+          <div class="alert alert-primary py-2 mt-3 mb-0 d-flex gap-2 align-items-center">
+            <i class="bi bi-calendar-event fs-5"></i>
+            <div class="small">
+              <strong>Interview:</strong>
+              {{ interview.interview_date|date:"d M Y" }}
+              at {{ interview.interview_time|time:"h:i A" }}
+              <span class="badge bg-primary ms-1">
+                {{ interview.get_round_type_display }}
+              </span>
+              {% if interview.meeting_link %}
+                &middot; <a href="{{ interview.meeting_link }}" target="_blank">Join Link</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <!-- Actions -->
+          <div class="mt-3 d-flex gap-2">
+            <a href="{% url 'jobs:detail' app.job.slug %}"
+               class="btn btn-outline-primary btn-sm">View Job</a>
+            {% if app.status == 'applied' %}
+            <a href="{% url 'applications:withdraw' app.id %}"
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Withdraw this application?')">
+              Withdraw
+            </a>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5">
+        <i class="bi bi-send text-muted" style="font-size:3rem;"></i>
+        <h5 class="mt-3">No applications yet</h5>
+        <p class="text-muted">Start applying to jobs to track them here</p>
+        <a href="{% url 'jobs:list' %}" class="btn btn-primary">Browse Jobs</a>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterApplications(status) {
+  document.querySelectorAll('.app-card').forEach(card => {
+    card.style.display = (!status || card.dataset.status === status) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

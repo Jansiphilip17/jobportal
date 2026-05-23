@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}My Resume – JobPortal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">{% include 'dashboard/candidate_sidebar.html' %}</div>
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-800 mb-0">Resume Management</h4>
+      </div>
+
+      <!-- Upload Resume Card -->
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3"><i class="bi bi-upload text-primary me-2"></i>Upload New Resume</h6>
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="upload">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label fw-600 small">Resume Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g., Software Engineer Resume" value="My Resume">
+              </div>
+              <div class="col-md-5">
+                <label class="form-label fw-600 small">File (PDF, DOC, DOCX · Max 5MB)</label>
+                <input type="file" name="resume_file" class="form-control" accept=".pdf,.doc,.docx" required>
+              </div>
+              <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-600">Upload</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Existing Resumes -->
+      {% for resume in resumes %}
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body p-4 d-flex gap-3 align-items-center">
+          <div class="fs-2 text-danger flex-shrink-0">
+            {% if resume.file_type == 'pdf' %}<i class="bi bi-file-earmark-pdf"></i>
+            {% else %}<i class="bi bi-file-earmark-word text-primary"></i>{% endif %}
+          </div>
+          <div class="flex-fill">
+            <div class="fw-700">{{ resume.title }}</div>
+            <div class="text-muted small">
+              Uploaded {{ resume.uploaded_at|date:"d M Y h:i A" }}
+              {% if resume.is_default %}<span class="badge bg-success ms-2">Default</span>{% endif %}
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{{ resume.file.url }}" download class="btn btn-outline-primary btn-sm" title="Download">
+              <i class="bi bi-download"></i>
+            </a>
+            {% if not resume.is_default %}
+            <form method="POST" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="set_default">
+              <input type="hidden" name="resume_id" value="{{ resume.id }}">
+              <button type="submit" class="btn btn-outline-success btn-sm" title="Set as Default">
+                <i class="bi bi-star"></i>
+              </button>
+            </form>
+            {% endif %}
+            <form method="POST" class="d-inline" onsubmit="return confirm('Delete this resume?')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="resume_id" value="{{ resume.id }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-file-earmark-text" style="font-size:3rem;"></i>
+        <p class="mt-3">No resumes uploaded yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

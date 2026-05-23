@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Saved Jobs – JobPortal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">{% include 'dashboard/candidate_sidebar.html' %}</div>
+    <div class="col-lg-9">
+      <h4 class="fw-800 mb-4">Saved Jobs</h4>
+      {% for saved in saved_jobs %}
+      <div class="card border-0 shadow-sm rounded-3 mb-3 hover-lift">
+        <div class="card-body p-4">
+          <div class="d-flex gap-3 align-items-start">
+            <div class="rounded-2 bg-primary-subtle d-flex align-items-center justify-content-center text-primary fw-700 fs-4 flex-shrink-0" style="width:52px;height:52px;">
+              {{ saved.job.company.name|first|upper }}
+            </div>
+            <div class="flex-fill">
+              <h6 class="fw-700 mb-0"><a href="{% url 'jobs:detail' saved.job.slug %}" class="text-dark text-decoration-none">{{ saved.job.title }}</a></h6>
+              <div class="text-muted small">{{ saved.job.company.name }} · {{ saved.job.location }}</div>
+              <div class="d-flex flex-wrap gap-1 mt-2">
+                <span class="badge bg-light text-dark border small">{{ saved.job.get_job_type_display }}</span>
+                <span class="badge bg-success-subtle text-success small">{{ saved.job.salary_display }}</span>
+              </div>
+            </div>
+            <div class="text-end">
+              <div class="text-muted small mb-2">Saved {{ saved.saved_at|timesince }} ago</div>
+              <a href="{% url 'jobs:detail' saved.job.slug %}" class="btn btn-primary btn-sm px-3 me-1">Apply</a>
+              <a href="{% url 'applications:save_job' saved.job.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-bookmark-x"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5">
+        <i class="bi bi-bookmark text-muted" style="font-size:3rem;"></i>
+        <h5 class="mt-3 text-muted">No saved jobs yet</h5>
+        <a href="{% url 'jobs:list' %}" class="btn btn-primary mt-2">Browse Jobs</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

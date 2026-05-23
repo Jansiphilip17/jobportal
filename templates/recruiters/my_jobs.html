@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}My Jobs – JobPortal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="list-group list-group-flush rounded-3">
+          <a href="{% url 'dashboard:index' %}" class="list-group-item list-group-item-action py-3 small"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+          <a href="{% url 'jobs:post' %}" class="list-group-item list-group-item-action py-3 small"><i class="bi bi-plus-circle me-2 text-success"></i>Post a Job</a>
+          <a href="{% url 'recruiters:my_jobs' %}" class="list-group-item list-group-item-action py-3 small active"><i class="bi bi-briefcase me-2"></i>My Jobs</a>
+          <a href="{% url 'recruiters:all_applicants' %}" class="list-group-item list-group-item-action py-3 small"><i class="bi bi-people me-2"></i>All Applicants</a>
+          <a href="{% url 'companies:my_company' %}" class="list-group-item list-group-item-action py-3 small"><i class="bi bi-building me-2"></i>My Company</a>
+          <a href="{% url 'accounts:profile_settings' %}" class="list-group-item list-group-item-action py-3 small"><i class="bi bi-gear me-2"></i>Settings</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-800 mb-0">My Jobs ({{ jobs.count }})</h4>
+        <a href="{% url 'jobs:post' %}" class="btn btn-primary fw-600"><i class="bi bi-plus me-1"></i>Post New Job</a>
+      </div>
+      {% for job in jobs %}
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <h6 class="fw-700 mb-0">{{ job.title }}</h6>
+              <div class="text-muted small">{{ job.company.name }} · {{ job.location }} · {{ job.get_job_type_display }}</div>
+              <div class="d-flex gap-2 mt-2">
+                {% if job.is_approved %}<span class="badge bg-success">Live</span>{% else %}<span class="badge bg-warning text-dark">Pending Approval</span>{% endif %}
+                {% if job.is_featured %}<span class="badge bg-primary">Featured</span>{% endif %}
+                <span class="badge bg-light text-dark border">{{ job.applications_count }} Applicants</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{% url 'recruiters:job_applicants' job.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-people me-1"></i>Applicants</a>
+              <a href="{% url 'jobs:edit' job.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'jobs:delete' job.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this job?')"><i class="bi bi-trash"></i></a>
+            </div>
+          </div>
+          <div class="text-muted small mt-2">Posted {{ job.created_at|date:"d M Y" }}
+            {% if job.application_deadline %} · Deadline: {{ job.application_deadline|date:"d M Y" }}{% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5">
+        <i class="bi bi-briefcase text-muted" style="font-size:3rem;"></i>
+        <h5 class="mt-3 text-muted">No jobs posted yet</h5>
+        <a href="{% url 'jobs:post' %}" class="btn btn-primary mt-2">Post Your First Job</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

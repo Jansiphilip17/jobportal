@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}{% if job %}Edit Job{% else %}Post a Job{% endif %} – JobPortal{% endblock %}
+
+{% block content %}
+<div class="bg-primary text-white py-4 mb-4">
+  <div class="container">
+    <h2 class="fw-800 mb-0">{% if job %}Edit Job{% else %}Post a New Job{% endif %}</h2>
+    <p class="opacity-75 mb-0">Fill in all the details below</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <form method="POST">
+        {% csrf_token %}
+
+        <!-- ── BASIC INFORMATION ── -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-4">
+              <i class="bi bi-info-circle text-primary me-2"></i>Basic Information
+            </h5>
+
+            <!-- Job Title -->
+            <div class="mb-3">
+              <label class="form-label fw-600">
+                Job Title <span class="text-danger">*</span>
+              </label>
+              {{ form.title }}
+              {% if form.title.errors %}
+                <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3">
+              <!-- Company -->
+              <div class="col-md-6">
+                <label class="form-label fw-600">
+                  Company <span class="text-danger">*</span>
+                </label>
+                {{ form.company }}
+                {% if form.company.errors %}
+                  <div class="text-danger small mt-1">{{ form.company.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Category -->
+              <div class="col-md-6">
+                <label class="form-label fw-600">Category</label>
+                {{ form.category }}
+              </div>
+
+              <!-- Job Type -->
+              <div class="col-md-6">
+                <label class="form-label fw-600">
+                  Job Type <span class="text-danger">*</span>
+                </label>
+                {{ form.job_type }}
+                {% if form.job_type.errors %}
+                  <div class="text-danger small mt-1">{{ form.job_type.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Experience -->
+              <div class="col-md-6">
+                <label class="form-label fw-600">
+                  Experience Required <span class="text-danger">*</span>
+                </label>
+                {{ form.experience_required }}
+                {% if form.experience_required.errors %}
+                  <div class="text-danger small mt-1">{{ form.experience_required.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Location -->
+              <div class="col-md-8">
+                <label class="form-label fw-600">
+                  Location <span class="text-danger">*</span>
+                </label>
+                {{ form.location }}
+                {% if form.location.errors %}
+                  <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Is Remote -->
+              <div class="col-md-4 d-flex align-items-end pb-1">
+                <div class="form-check">
+                  {{ form.is_remote }}
+                  <label class="form-check-label fw-600 ms-1">Remote Job</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── JOB DETAILS ── -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-4">
+              <i class="bi bi-file-text text-primary me-2"></i>Job Details
+            </h5>
+
+            <div class="mb-3">
+              <label class="form-label fw-600">
+                Job Description <span class="text-danger">*</span>
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600">Responsibilities</label>
+              {{ form.responsibilities }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600">Requirements</label>
+              {{ form.requirements }}
+            </div>
+
+            <div class="mb-0">
+              <label class="form-label fw-600">Benefits</label>
+              {{ form.benefits }}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SALARY & OPENINGS ── -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-4">
+              <i class="bi bi-cash-coin text-primary me-2"></i>Salary & Openings
+            </h5>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-600">Min Salary (₹)</label>
+                {{ form.min_salary }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-600">Max Salary (₹)</label>
+                {{ form.max_salary }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-600">Number of Openings</label>
+                {{ form.num_openings }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600">Application Deadline</label>
+                {{ form.application_deadline }}
+              </div>
+              <div class="col-md-6 d-flex align-items-end pb-1">
+                <div class="form-check">
+                  {{ form.is_salary_disclosed }}
+                  <label class="form-check-label fw-600 ms-1">Show salary to candidates</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SKILLS ── -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-3">
+              <i class="bi bi-tags text-primary me-2"></i>Skills Required
+            </h5>
+            <input type="text" id="skillInput" class="form-control mb-2"
+                   placeholder="Type a skill and press Enter  e.g. Python, React, MySQL">
+            <div id="skillTags" class="d-flex flex-wrap gap-2 mb-2 min-height-40"></div>
+            <input type="hidden" name="skills" id="skillsHidden">
+            <small class="text-muted">Add up to 15 skills. Press Enter after each one.</small>
+          </div>
+        </div>
+
+        <!-- ── BUTTONS ── -->
+        <div class="d-flex gap-3 justify-content-end">
+          <a href="{% url 'recruiters:my_jobs' %}" class="btn btn-outline-secondary px-4">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-5 fw-600">
+            <i class="bi bi-send me-2"></i>
+            {% if job %}Update Job{% else %}Post Job{% endif %}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const skills = [];
+const skillInput  = document.getElementById('skillInput');
+const skillTags   = document.getElementById('skillTags');
+const skillsHidden = document.getElementById('skillsHidden');
+
+function updateHidden() {
+  skillsHidden.value = skills.join(',');
+}
+
+function addSkill(name) {
+  name = name.trim();
+  if (name && !skills.includes(name) && skills.length < 15) {
+    skills.push(name);
+    const tag = document.createElement('span');
+    tag.className = 'badge bg-primary-subtle text-primary px-3 py-2 d-flex align-items-center gap-1';
+    tag.innerHTML = `${name} <span style="cursor:pointer;font-size:14px;" onclick="removeSkill('${name}', this)">&times;</span>`;
+    skillTags.appendChild(tag);
+    updateHidden();
+  }
+}
+
+function removeSkill(name, el) {
+  skills.splice(skills.indexOf(name), 1);
+  el.closest('.badge').remove();
+  updateHidden();
+}
+
+skillInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addSkill(skillInput.value);
+    skillInput.value = '';
+  }
+});
+
+// Pre-fill skills when editing
+{% if existing_skills %}
+  {% for skill in existing_skills %}
+    addSkill("{{ skill.name }}");
+  {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

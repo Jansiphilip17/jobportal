@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Application Detail – JobPortal{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Candidate info -->
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex gap-3 align-items-start">
+            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-700 fs-3 flex-shrink-0" style="width:64px;height:64px;">
+              {{ application.candidate.first_name|first|upper }}{{ application.candidate.last_name|first|upper }}
+            </div>
+            <div class="flex-fill">
+              <h5 class="fw-800 mb-0">{{ application.candidate.get_full_name }}</h5>
+              <div class="text-muted">{{ application.candidate.email }} · {{ application.candidate.phone }}</div>
+              {% with profile=application.candidate.candidate_profile %}
+              {% if profile.headline %}<div class="mt-1">{{ profile.headline }}</div>{% endif %}
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                {% if profile.linkedin_url %}<a href="{{ profile.linkedin_url }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-linkedin me-1"></i>LinkedIn</a>{% endif %}
+                {% if profile.github_url %}<a href="{{ profile.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="bi bi-github me-1"></i>GitHub</a>{% endif %}
+                {% if profile.portfolio_url %}<a href="{{ profile.portfolio_url }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-globe me-1"></i>Portfolio</a>{% endif %}
+              </div>
+              {% endwith %}
+            </div>
+            {% if application.resume %}
+            <a href="{{ application.resume.file.url }}" download class="btn btn-primary btn-sm"><i class="bi bi-download me-1"></i>Resume</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Cover Letter -->
+      {% if application.cover_letter %}
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3">Cover Letter</h6>
+          <p class="text-muted">{{ application.cover_letter|linebreaks }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Skills -->
+      {% with profile=application.candidate.candidate_profile %}
+      {% if profile.skills.exists %}
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3">Skills</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for skill in profile.skills.all %}
+            <span class="badge bg-primary-subtle text-primary px-3 py-2">{{ skill.skill_name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Status Card -->
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3">Update Status</h6>
+          <form method="POST" action="{% url 'recruiters:update_application_status' application.id %}">
+            {% csrf_token %}
+            <select name="status" class="form-select mb-3">
+              {% for val, label in status_choices %}
+              <option value="{{ val }}" {% if application.status == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary w-100 fw-600">Update Status</button>
+          </form>
+          <hr>
+          <a href="{% url 'interviews:schedule' application.id %}" class="btn btn-outline-success w-100 fw-600">
+            <i class="bi bi-calendar-plus me-1"></i>Schedule Interview
+          </a>
+        </div>
+      </div>
+
+      <!-- Application Info -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-3">Application Info</h6>
+          <div class="small">
+            <div class="mb-2"><span class="text-muted">Job:</span> <strong>{{ application.job.title }}</strong></div>
+            <div class="mb-2"><span class="text-muted">Applied:</span> {{ application.applied_at|date:"d M Y h:i A" }}</div>
+            <div class="mb-2"><span class="text-muted">Status:</span>
+              <span class="badge bg-primary">{{ application.get_status_display }}</span>
+            </div>
+          </div>
+          <!-- Status history -->
+          {% if application.status_history.exists %}
+          <hr>
+          <h6 class="fw-700 mb-2 small">Status History</h6>
+          {% for h in application.status_history.all|slice:":5" %}
+          <div class="d-flex gap-2 align-items-center mb-1">
+            <div class="bg-primary rounded-circle" style="width:6px;height:6px;flex-shrink:0;"></div>
+            <div style="font-size:11px;" class="text-muted">{{ h.status|title }} · {{ h.changed_at|date:"d M Y" }}</div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
